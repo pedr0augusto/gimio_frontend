@@ -1,87 +1,114 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Button, ScrollView, Text } from 'react-native';
-import { TopStatusBar } from '../components/header/TopStatusBar';
+import React from 'react';
+import { 
+  SafeAreaView, 
+  View, 
+  ScrollView, 
+  StyleSheet, 
+  Text, 
+  useColorScheme,
+  StatusBar,
+  Platform, // Importado para ajustes na barra de status em diferentes plataformas
+} from 'react-native';
+
+// Assumindo a estrutura: screens/HomeScreen.tsx => ../components/...
+import { TopStatusBar } from '../components/header/TopStatusBar'; 
 import { BottomMenu } from '../components/BottomMenu';
 
-export default function HomeScreen() {
-  const [level, setLevel] = useState(1);
-  const [streak, setStreak] = useState(0);
-  const [gems, setGems] = useState(0);
-  const [lives, setLives] = useState(3);
+// Componentes e Tipagem
+import { MissionsList } from '../components/missions/MissionsList'; 
+import { Mission, MissionType } from '../components/missions/MissionItem'; 
 
+// --- DADOS DE TESTE DE MISSÕES --- (Com item 12 corrigido)
+const initialMissions: Mission[] = [
+  { id: 1, title: 'Introdução à Álgebra', type: 'matematica', completed: true },
+  { id: 2, title: 'Células e Tecidos', type: 'biologia', completed: true },
+  { id: 3, title: 'Crônicas Famosas', type: 'portugues', completed: false },
+  { id: 4, title: 'Geometria Espacial', type: 'matematica', completed: false },
+  { id: 5, title: 'Genética Básica', type: 'biologia', completed: false },
+  { id: 6, title: 'Concordância Verbal', type: 'portugues', completed: false },
+  { id: 7, title: 'Funções de 1º Grau', type: 'matematica', completed: false },
+  { id: 8, title: 'Ecologia', type: 'biologia', completed: false },
+  { id: 9, title: 'Sintaxe do Período', type: 'portugues', completed: false },
+  { id: 10, title: 'Probabilidade', type: 'matematica', completed: false },
+  { id: 11, title: 'Divisão Silábica', type: 'portugues', completed: false },
+  { id: 12, title: 'Mitose e Meiose', type: 'biologia', completed: false },
+];
+// --- FIM DOS DADOS DE TESTE ---
+
+export function HomeScreen() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  
+  // CORREÇÃO: Usando PRETO ABSOLUTO (#000000) no modo escuro para OLED/AMOLED
+  const backgroundColor = isDark ? '#121212' : '#FFFFFF';
+  const statusBarStyle = isDark ? 'light-content' : 'dark-content';
+  
+  const statusBarProps = { level: 15, streak: 7, gems: 120, lives: 5 };
+  
+  const menuProps = {
+    onPressHome: () => console.log('Navegar para Home'),
+    onPressRedacao: () => console.log('Abrir Redação'),
+    onPressCalculadora: () => console.log('Abrir Calculadora'),
+    onPressPremium: () => console.log('Abrir Premium'),
+    onPressSettings: () => console.log('Abrir Configurações'),
+  };
+
+  const handleMissionPress = (missionId: number) => {
+    console.log(`Missão ${missionId} clicada!`);
+  };
+  
   return (
-    <View style={styles.container}>
-      {/* Top menu flutuante */}
-      <TopStatusBar
-        level={level}
-        streak={streak}
-        gems={gems}
-        lives={lives}
+    // 1. CONTAINER PAI (View): Aplica a cor de fundo em 100% da tela física.
+    <View style={[styles.fullScreenContainer, { backgroundColor }]}>
+      
+      {/* 2. CONTROLADOR DE BARRA DE STATUS */}
+      <StatusBar 
+        barStyle={statusBarStyle} 
+        backgroundColor={backgroundColor} 
+        // Translucent é importante para Android
+        translucent={Platform.OS === 'android'}
       />
 
-      {/* Conteúdo da tela */}
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.buttonsContainer}>
-          <Text style={styles.label}>Nível</Text>
-          <View style={styles.buttonRow}>
-            <Button title="-" onPress={() => setLevel(prev => Math.max(prev - 1, 1))} />
-            <Button title="+" onPress={() => setLevel(prev => Math.min(prev + 1, 120))} />
-          </View>
+      {/* 3. CONTEÚDO ENVOLVIDO POR SafeAreaView: Garante o padding correto para os menus. */}
+      <SafeAreaView style={styles.safeAreaContent}>
+        
+        {/* 1. COMPONENTE SUPERIOR FIXO (Colado no topo seguro) */}
+        <TopStatusBar {...statusBarProps} /> 
 
-          <Text style={styles.label}>Ofensiva</Text>
-          <View style={styles.buttonRow}>
-            <Button title="-" onPress={() => setStreak(prev => Math.max(prev - 1, 0))} />
-            <Button title="+" onPress={() => setStreak(prev => prev + 1)} />
-          </View>
+        {/* 2. CONTEÚDO ROLÁVEL (Área de Missões) */}
+        <ScrollView style={styles.contentArea}>
+          
+          <MissionsList 
+            missions={initialMissions} 
+            onMissionPress={handleMissionPress} 
+          />
+          
+          <Text style={{ textAlign: 'center', padding: 20, color: isDark ? '#aaa' : '#888' }}>
+            Explore a trilha de aprendizado!
+          </Text>
+          
+        </ScrollView>
+        
+        {/* 3. COMPONENTE INFERIOR FIXO (Colado na base segura) */}
+        <BottomMenu {...menuProps} />
+        
+      </SafeAreaView>
 
-          <Text style={styles.label}>Gemas</Text>
-          <View style={styles.buttonRow}>
-            <Button title="-" onPress={() => setGems(prev => Math.max(prev - 1, 0))} />
-            <Button title="+" onPress={() => setGems(prev => prev + 10)} />
-          </View>
-
-          <Text style={styles.label}>Vidas</Text>
-          <View style={styles.buttonRow}>
-            <Button title="-" onPress={() => setLives(prev => Math.max(prev - 1, 0))} />
-            <Button title="+" onPress={() => setLives(prev => prev + 1)} />
-          </View>
-        </View>
-      </ScrollView>
-
-      {/* Bottom menu flutuante */}
-      <BottomMenu
-        onPressHome={() => console.log('Home')}
-        onPressRedacao={() => console.log('Redação')}
-        onPressCalculadora={() => console.log('Calculadora')}
-        onPressPremium={() => console.log('Premium')}
-        onPressSettings={() => console.log('Settings')}
-      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  fullScreenContainer: {
+    // ESSENCIAL: O View que se estende de ponta a ponta
+    flex: 1, 
+  },
+  safeAreaContent: {
+    // Este SafeAreaView agora faz o trabalho de layout principal
     flex: 1,
-    backgroundColor: '#f7f7f7',
+    // Note: No iOS, o padding do notch é aplicado aqui.
   },
-  scrollContent: {
-    paddingTop: 80, // espaço para o TopStatusBar
-    paddingBottom: 80, // espaço para o BottomMenu
-    paddingHorizontal: 16,
-  },
-  buttonsContainer: {
-    marginTop: 20,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-    marginTop: 4,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 12,
+  contentArea: {
+    flex: 1, 
   },
 });

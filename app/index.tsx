@@ -1,18 +1,22 @@
-import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import HomeScreen from '../src/screens/HomeScreen';
+// app/index.tsx
 
-export default function Index() {
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+// Certifique-se de que o caminho está correto para sua estrutura
+import { HomeScreen } from '../src/screens/HomeScreen'; 
+
+export default function Index() { 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <HomeScreen />
-    </ScrollView>
+    <View style={styles.container}>
+      {/* Certifique-se de que não há NENHUMA string de texto solta aqui. */}
+      <HomeScreen /> 
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
-    backgroundColor: '#f7f7f7',
+    flex: 1, 
+    // Garante que o fundo não seja branco por baixo (já discutido)
   },
 });

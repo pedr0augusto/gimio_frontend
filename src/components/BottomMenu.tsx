@@ -18,12 +18,11 @@ export function BottomMenu({
   onPressSettings,
 }: BottomMenuProps) {
   const [activeTab, setActiveTab] = useState<'home' | 'redacao' | 'calculadora' | 'premium' | 'settings'>('home');
-  const colorScheme = useColorScheme(); // 'light' | 'dark'
+  const colorScheme = useColorScheme(); 
   const isDark = colorScheme === 'dark';
 
   const tabs: typeof activeTab[] = ['home', 'redacao', 'calculadora', 'premium', 'settings'];
 
-  // scale values per tab using RN Animated to avoid worklets mismatch
   const scaleAnim = tabs.reduce((acc, tab) => {
     acc[tab] = React.useRef(new Animated.Value(tab === activeTab ? 1.2 : 1)).current;
     return acc;
@@ -60,6 +59,7 @@ export function BottomMenu({
             animatedStyle,
           ]}
         >
+          {/* OBS: O caminho das imagens foi omitido, use os caminhos corretos do seu projeto */}
           <Image source={icon} style={styles.icon} />
         </Animated.View>
       </TouchableOpacity>
@@ -67,7 +67,8 @@ export function BottomMenu({
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['left', 'right']}>
+    // SafeAreaView includes bottom and matches background so there is no white gap
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: isDark ? '#121212' : '#fff' }]} edges={['left', 'right', 'bottom']}> 
       <View style={[styles.divider, { backgroundColor: isDark ? '#444' : '#c0c0c0' }]} />
       <View style={[styles.container, { backgroundColor: isDark ? '#121212' : '#fff' }]}>
         {renderButton('home', require('../assets/icons/home.png'), onPressHome)}
@@ -82,11 +83,7 @@ export function BottomMenu({
 
 const styles = StyleSheet.create({
   safeArea: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    zIndex: 100,
+    width: '100%',
     backgroundColor: 'transparent',
   },
   divider: {
@@ -95,7 +92,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingVertical: 20,
+    paddingVertical: 12,
   },
   button: {
     alignItems: 'center',
