@@ -1,50 +1,42 @@
-import React from 'react';
-import { 
-  SafeAreaView, 
-  View, 
-  ScrollView, 
-  StyleSheet, 
-  Text, 
-  useColorScheme,
+import React, { useState } from 'react';
+import {
+  Platform,
+  SafeAreaView,
+  ScrollView,
   StatusBar,
-  Platform, // Importado para ajustes na barra de status em diferentes plataformas
+  StyleSheet,
+  Text,
+  useColorScheme,
+  View,
 } from 'react-native';
 
-// Assumindo a estrutura: screens/HomeScreen.tsx => ../components/...
-import { TopStatusBar } from '../components/header/TopStatusBar'; 
+// Componentes de UI
 import { BottomMenu } from '../components/BottomMenu';
+import { TopStatusBar } from '../components/header/TopStatusBar';
 
-// Componentes e Tipagem
-import { MissionsList } from '../components/missions/MissionsList'; 
-import { Mission, MissionType } from '../components/missions/MissionItem'; 
+// Componentes de Missões
+import { Mission } from '../components/missions/MissionItem';
+import { MissionsList } from '../components/missions/MissionsList';
 
-// --- DADOS DE TESTE DE MISSÕES --- (Com item 12 corrigido)
+// --- DADOS DE TESTE DE MISSÕES ---
 const initialMissions: Mission[] = [
-  { id: 1, title: 'Introdução à Álgebra', type: 'matematica', completed: true },
-  { id: 2, title: 'Células e Tecidos', type: 'biologia', completed: true },
-  { id: 3, title: 'Crônicas Famosas', type: 'portugues', completed: false },
-  { id: 4, title: 'Geometria Espacial', type: 'matematica', completed: false },
-  { id: 5, title: 'Genética Básica', type: 'biologia', completed: false },
-  { id: 6, title: 'Concordância Verbal', type: 'portugues', completed: false },
-  { id: 7, title: 'Funções de 1º Grau', type: 'matematica', completed: false },
-  { id: 8, title: 'Ecologia', type: 'biologia', completed: false },
-  { id: 9, title: 'Sintaxe do Período', type: 'portugues', completed: false },
-  { id: 10, title: 'Probabilidade', type: 'matematica', completed: false },
-  { id: 11, title: 'Divisão Silábica', type: 'portugues', completed: false },
-  { id: 12, title: 'Mitose e Meiose', type: 'biologia', completed: false },
+  { id: 1, title: 'Exercícios de Matemática', type: 'matematica', completed: false },
+  { id: 2, title: 'Exercícios de Biologia', type: 'biologia', completed: false },
+  { id: 3, title: 'Exercícios de Português', type: 'portugues', completed: false },
+  { id: 4, title: 'Exercícios de Matemática', type: 'matematica', completed: false },
+  { id: 5, title: 'Exercícios de Biologia', type: 'biologia', completed: false },
+  { id: 6, title: 'Exercícios de Português', type: 'portugues', completed: false },
 ];
 // --- FIM DOS DADOS DE TESTE ---
 
 export function HomeScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  
-  // CORREÇÃO: Usando PRETO ABSOLUTO (#000000) no modo escuro para OLED/AMOLED
-  const backgroundColor = isDark ? '#121212' : '#FFFFFF';
+  const backgroundColor = isDark ? '#121212' : '#FFFFFF'; // PRETO ABSOLUTO para OLED/AMOLED
   const statusBarStyle = isDark ? 'light-content' : 'dark-content';
-  
+
   const statusBarProps = { level: 15, streak: 7, gems: 120, lives: 5 };
-  
+
   const menuProps = {
     onPressHome: () => console.log('Navegar para Home'),
     onPressRedacao: () => console.log('Abrir Redação'),
@@ -53,62 +45,48 @@ export function HomeScreen() {
     onPressSettings: () => console.log('Abrir Configurações'),
   };
 
+  const [missions, setMissions] = useState<Mission[]>(initialMissions);
+
   const handleMissionPress = (missionId: number) => {
-    console.log(`Missão ${missionId} clicada!`);
+    setMissions(prevMissions => {
+      const nextIndex = prevMissions.findIndex(m => !m.completed);
+      if (nextIndex === -1) return prevMissions;
+      if (prevMissions[nextIndex].id === missionId) {
+        const updated = [...prevMissions];
+        updated[nextIndex] = { ...updated[nextIndex], completed: true };
+        return updated;
+      }
+      return prevMissions;
+    });
   };
-  
+
   return (
-    // 1. CONTAINER PAI (View): Aplica a cor de fundo em 100% da tela física.
-    <View style={[styles.fullScreenContainer, { backgroundColor }]}>
-      
-      {/* 2. CONTROLADOR DE BARRA DE STATUS */}
-      <StatusBar 
-        barStyle={statusBarStyle} 
-        backgroundColor={backgroundColor} 
-        // Translucent é importante para Android
+    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}>
+      <StatusBar
+        barStyle={statusBarStyle}
+        backgroundColor={backgroundColor}
         translucent={Platform.OS === 'android'}
       />
 
-      {/* 3. CONTEÚDO ENVOLVIDO POR SafeAreaView: Garante o padding correto para os menus. */}
-      <SafeAreaView style={styles.safeAreaContent}>
-        
-        {/* 1. COMPONENTE SUPERIOR FIXO (Colado no topo seguro) */}
-        <TopStatusBar {...statusBarProps} /> 
+      <View style={[styles.container, { backgroundColor }]}>
+        <TopStatusBar {...statusBarProps} />
 
-        {/* 2. CONTEÚDO ROLÁVEL (Área de Missões) */}
-        <ScrollView style={styles.contentArea}>
-          
-          <MissionsList 
-            missions={initialMissions} 
-            onMissionPress={handleMissionPress} 
-          />
-          
+        <ScrollView style={[styles.contentArea, { backgroundColor }]}>
+          <MissionsList missions={missions} onMissionPress={handleMissionPress} />
+
           <Text style={{ textAlign: 'center', padding: 20, color: isDark ? '#aaa' : '#888' }}>
             Explore a trilha de aprendizado!
           </Text>
-          
         </ScrollView>
-        
-        {/* 3. COMPONENTE INFERIOR FIXO (Colado na base segura) */}
-        <BottomMenu {...menuProps} />
-        
-      </SafeAreaView>
 
-    </View>
+        <BottomMenu {...menuProps} />
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  fullScreenContainer: {
-    // ESSENCIAL: O View que se estende de ponta a ponta
-    flex: 1, 
-  },
-  safeAreaContent: {
-    // Este SafeAreaView agora faz o trabalho de layout principal
-    flex: 1,
-    // Note: No iOS, o padding do notch é aplicado aqui.
-  },
-  contentArea: {
-    flex: 1, 
-  },
+  safeArea: { flex: 1 },
+  container: { flex: 1 },
+  contentArea: { flex: 1 },
 });
