@@ -10,54 +10,86 @@ import {
   View,
 } from 'react-native';
 
-// Componentes de UI
+// UI
 import { BottomMenu } from '../components/BottomMenu';
 import { TopStatusBar } from '../components/header/TopStatusBar';
 
-// Componentes de Missões
+// Missões
+import { MissionInfoModal } from '../components/missions/MissionInfoModal';
 import { Mission } from '../components/missions/MissionItem';
 import { MissionsList } from '../components/missions/MissionsList';
 
-// --- DADOS DE TESTE DE MISSÕES ---
+// --- DADOS DE TESTE ---
 const initialMissions: Mission[] = [
-  { id: 1, title: 'Exercícios de Matemática', type: 'matematica', completed: false },
-  { id: 2, title: 'Exercícios de Biologia', type: 'biologia', completed: false },
-  { id: 3, title: 'Exercícios de Português', type: 'portugues', completed: false },
-  { id: 4, title: 'Exercícios de Matemática', type: 'matematica', completed: false },
-  { id: 5, title: 'Exercícios de Biologia', type: 'biologia', completed: false },
-  { id: 6, title: 'Exercícios de Português', type: 'portugues', completed: false },
+  { id: 1, title: 'Matemática básica', type: 'matematica', completed: false },
+  { id: 2, title: 'Biologia celular I', type: 'biologia', completed: false },
+  { id: 3, title: 'Interpretação de texto I', type: 'portugues', completed: false },
+  { id: 4, title: 'Quimica I', type: 'quimica', completed: false },
+  { id: 5, title: 'Fisica I', type: 'fisica', completed: false },
 ];
-// --- FIM DOS DADOS DE TESTE ---
+// --- FIM ---
 
 export function HomeScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const backgroundColor = isDark ? '#121212' : '#FFFFFF'; // PRETO ABSOLUTO para OLED/AMOLED
+
+  const backgroundColor = isDark ? '#121212' : '#FFFFFF';
   const statusBarStyle = isDark ? 'light-content' : 'dark-content';
 
-  const statusBarProps = { level: 15, streak: 7, gems: 120, lives: 5 };
+  const statusBarProps = {
+    level: 15,
+    streak: 7,
+    gems: 120,
+    lives: 5,
+  };
 
   const menuProps = {
-    onPressHome: () => console.log('Navegar para Home'),
-    onPressRedacao: () => console.log('Abrir Redação'),
-    onPressCalculadora: () => console.log('Abrir Calculadora'),
-    onPressPremium: () => console.log('Abrir Premium'),
-    onPressSettings: () => console.log('Abrir Configurações'),
+    onPressHome: () => {},
+    onPressRedacao: () => {},
+    onPressCalculadora: () => {},
+    onPressPremium: () => {},
+    onPressSettings: () => {},
   };
 
   const [missions, setMissions] = useState<Mission[]>(initialMissions);
 
-  const handleMissionPress = (missionId: number) => {
-    setMissions(prevMissions => {
-      const nextIndex = prevMissions.findIndex(m => !m.completed);
-      if (nextIndex === -1) return prevMissions;
-      if (prevMissions[nextIndex].id === missionId) {
-        const updated = [...prevMissions];
-        updated[nextIndex] = { ...updated[nextIndex], completed: true };
-        return updated;
+  // MISSÃO SELECIONADA (MODAL)
+  const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
+  const [anchorX, setAnchorX] = useState(0); // posição horizontal da bolha
+  const [anchorY, setAnchorY] = useState(0); // posição vertical da bolha
+
+  // 👉 Ao clicar na missão (APENAS abre o modal)
+const handleMissionPress = (missionId: number, ref: React.RefObject<View | null>) => {
+  const mission = missions.find(m => m.id === missionId);
+  if (!mission || !ref.current) return;
+
+  ref.current.measure((fx, fy, width, height, px, py) => {
+    setSelectedMission(mission);
+    setAnchorY(py + height + 10); // posição vertical da bolha
+    setAnchorX(px + width / 2); // posição horizontal da bolha/ seta
+  });
+};
+
+
+  // 👉 Concluir missão ao clicar em "Começar"
+  const handleStartMission = () => {
+    if (!selectedMission) return;
+
+    setMissions(prev => {
+      const updated = [...prev];
+      const index = updated.findIndex(m => m.id === selectedMission.id);
+
+      if (index !== -1) {
+        updated[index] = {
+          ...updated[index],
+          completed: true,
+        };
       }
-      return prevMissions;
+
+      return updated;
     });
+
+    setSelectedMission(null);
   };
 
   return (
@@ -71,16 +103,37 @@ export function HomeScreen() {
       <View style={[styles.container, { backgroundColor }]}>
         <TopStatusBar {...statusBarProps} />
 
-        <ScrollView style={[styles.contentArea, { backgroundColor }]}>
-          <MissionsList missions={missions} onMissionPress={handleMissionPress} />
+        <ScrollView style={styles.contentArea}>
+          <MissionsList
+            missions={missions}
+            onMissionPress={handleMissionPress} // agora recebe (id, ref)
+          />
 
-          <Text style={{ textAlign: 'center', padding: 20, color: isDark ? '#aaa' : '#888' }}>
+          <Text
+            style={{
+              textAlign: 'center',
+              padding: 20,
+              color: isDark ? '#aaa' : '#888',
+            }}
+          >
             Explore a trilha de aprendizado!
           </Text>
         </ScrollView>
 
         <BottomMenu {...menuProps} />
       </View>
+
+      {/* MODAL DA MISSÃO */}
+      <MissionInfoModal
+        visible={!!selectedMission}
+        missionId={selectedMission?.id ?? 0}
+        title={selectedMission?.title ?? ''}
+        type={selectedMission?.type ?? 'matematica'}
+        anchorY={anchorY}
+        anchorX={anchorX}
+        onClose={() => setSelectedMission(null)}
+        onStart={handleStartMission}
+      />
     </SafeAreaView>
   );
 }

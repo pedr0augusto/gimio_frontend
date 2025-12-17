@@ -1,34 +1,27 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { MissionItem, Mission } from './MissionItem';
 
 interface MissionsListProps {
   missions: Mission[];
-  onMissionPress: (missionId: number) => void;
+  onMissionPress: (missionId: number, ref: React.RefObject<View | null>) => void;
 }
 
 const ITEM_WIDTH = 82;
 const OFFSETS_PATTERN_LEFT = [50, 55, 60, 55, 50, 45, 40, 45];
 
-export const MissionsList: React.FC<MissionsListProps> = ({
-  missions,
-  onMissionPress,
-}) => {
-  // acha a primeira missão não concluída
+export const MissionsList: React.FC<MissionsListProps> = ({ missions, onMissionPress }) => {
   const nextMissionIndex = missions.findIndex(m => !m.completed);
 
   return (
     <View style={styles.container}>
       {missions.map((mission, index) => {
         let status: 'blocked' | 'next' | 'completed';
+        if (mission.completed) status = 'completed';
+        else if (index === nextMissionIndex) status = 'next';
+        else status = 'blocked';
 
-        if (mission.completed) {
-          status = 'completed';
-        } else if (index === nextMissionIndex) {
-          status = 'next';
-        } else {
-          status = 'blocked';
-        }
+        const missionRef = useRef<View | null>(null);
 
         return (
           <View
@@ -42,9 +35,10 @@ export const MissionsList: React.FC<MissionsListProps> = ({
             ]}
           >
             <MissionItem
+              ref={missionRef}
               mission={mission}
               status={status}
-              onPress={() => onMissionPress(mission.id)}
+              onPress={() => onMissionPress(mission.id, missionRef)}
             />
           </View>
         );
@@ -54,13 +48,6 @@ export const MissionsList: React.FC<MissionsListProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    paddingVertical: 30,
-    width: '100%',
-  },
-  missionWrapper: {
-    alignItems: 'center',
-    marginVertical: 10,
-    width: ITEM_WIDTH,
-  },
+  container: { paddingVertical: 30, width: '100%' },
+  missionWrapper: { alignItems: 'center', marginVertical: 10, width: ITEM_WIDTH },
 });
